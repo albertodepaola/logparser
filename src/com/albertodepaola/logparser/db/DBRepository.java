@@ -9,12 +9,18 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DBRepository {
+public abstract class DBRepository<T> {
 	public static Connection getConnection() throws SQLException {
 		// TODO pasar a confirutacion, usar tables.json existente
 		return DriverManager.getConnection("jdbc:mysql://localhost:3306/logparser?" + "user=root&password=");
 	}
 
+	public abstract T insert(T entity);
+	public abstract List<T> listAll() throws SQLException;
+	public abstract T update(T entity);
+	public abstract Boolean delete(T entity);
+	
+	
 	private static ResultSet executeQuery(String query) throws SQLException {
 		Statement stmt = null;
 		ResultSet rs = null;
