@@ -1,0 +1,11 @@
+{
+	"documentation": "This file contains the column definition of the log file, allowing the parser to be used with different log files with different columns. Each column definition has to have an index value, that correlates with the position in the log file",
+	"configuration": {
+		"date": "0",
+		"ipv4": "1",
+		"request": "2",
+		"status": "3",
+		"userAgent": "4"
+	}
+	
+}

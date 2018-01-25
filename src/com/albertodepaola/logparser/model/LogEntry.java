@@ -1,17 +1,20 @@
 package com.albertodepaola.logparser.model;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class LogEntry {
 
 	private Long id;
 	private String ip;
+	private String ipv6;
 	private Date date;
 	private String request;
 	private Integer status;
 	private String userAgent;
 	private String completeLine;
 	private LogFile logFile;
+	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 
 	public Long getId() {
 		return id;
@@ -27,6 +30,14 @@ public class LogEntry {
 
 	public void setIp(String ip) {
 		this.ip = ip;
+	}
+
+	public String getIpv6() {
+		return ipv6;
+	}
+
+	public void setIpv6(String ipv6) {
+		this.ipv6 = ipv6;
 	}
 
 	public Date getDate() {
@@ -75,6 +86,12 @@ public class LogEntry {
 
 	public void setLogFile(LogFile log) {
 		this.logFile = log;
+	}
+	
+	@Override
+	public String toString(){
+		// TODO use bean utils
+		return this.ip + " - " + sdf.format(this.date) + " : " + this.completeLine;
 	}
 
 }

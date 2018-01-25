@@ -6,18 +6,22 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
+import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
+import com.albertodepaola.logparser.model.Configuration;
 import com.albertodepaola.logparser.model.DURATION;
-
-import static java.util.stream.Collectors.*;
+import com.albertodepaola.logparser.model.LogEntry;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 public class Parser {
 
@@ -25,19 +29,23 @@ public class Parser {
 	private Date startDate;
 	private DURATION duration;
 	private Integer threshold;
+	private Map<String, Integer> configMap;
 
 	private Parser(ParserBuilder builder) {
 		this.accesslog = builder.accesslog;
 		this.startDate = builder.startDate;
 		this.duration = builder.duration;
 		this.threshold = builder.threshold;
+		this.configMap = builder.configMap;
 	}
 
 	public static class ParserBuilder {
 		private File accesslog;
-		public Date startDate;
-		public DURATION duration;
-		public Integer threshold;
+		private Date startDate;
+		private DURATION duration;
+		private Integer threshold;
+		private Map<String, Integer> configMap;
+		
 
 		public ParserBuilder(File file) throws FileNotFoundException {
 			if (file.exists())
@@ -73,10 +81,29 @@ public class Parser {
 			this.threshold = Integer.valueOf(threshold);
 			return this;
 		}
+		
+		public ParserBuilder filePath(String configFilePath) throws FileNotFoundException {
+			File f = new File(configFilePath);
+			if (f.exists()) {
+				Gson g = new Gson();
+				FileReader fr = new FileReader(f);
+
+				Type type = new TypeToken<HashMap<String, Integer>>() {}.getType();
+
+//				HashMap<String, Integer> configMap = g.fromJson(fr, type);
+				Configuration c = g.fromJson(fr, Configuration.class);
+				this.configMap = c.getConfiguration();
+			} else
+				throw new FileNotFoundException("The file " + f.getAbsolutePath() + " does not exist");
+			
+			return this;
+		}
 
 		public Parser build() {
 			return new Parser(this);
 		}
+
+
 
 	}
 	
@@ -85,33 +112,78 @@ public class Parser {
 		Reader reader = null;
 		LineNumberReader lnr = null;
 		try {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 			reader = new FileReader(this.accesslog);
 			lnr = new LineNumberReader(reader);
 			String line = null;
+			Map<String, Integer> ipCounter = new HashMap<>();
+			long startTime = System.currentTimeMillis();
+//			long startTimeNano = System.nanoTime();
 			while((line = lnr.readLine()) != null) {
-				System.out.println(line);
-				List<String> lineList = Arrays.asList(line.split("\\|"));
 				
+//				System.out.println(startTime);
+				List<String> lineList = Arrays.asList(line.split("\\|"));
+//				System.out.println("Array Split time: " + (System.currentTimeMillis() - startTime));
+//				System.out.println("Array Split time: " + (System.nanoTime() - startTimeNano));
+				
+//				startTime = System.currentTimeMillis();
+//				startTimeNano = System.nanoTime();
+				// not used because of performance issues
+				/*
 				Map<Integer, String> indexColumnMap = IntStream.range(0, lineList.size())
 		         .boxed()
 		         .collect(toMap(i -> i, lineList::get));
+				*/
+//				System.out.println("Collect to Map time: " + (System.currentTimeMillis() - startTime));
+//				System.out.println("Collect to Map time: " + (System.nanoTime() - startTimeNano));
+				
+//				startTime = System.currentTimeMillis();
+//				startTimeNano = System.nanoTime();
+				Map<Integer, String> indexColumnMap = new HashMap<>();
+				int count = 0;
+				for (String string : lineList) {
+					indexColumnMap.put(count++, string);
+				}
+//				System.out.println("Collect to Map time: " + (System.currentTimeMillis() - startTime));
+//				System.out.println("Collect to Map time: " + (System.nanoTime() - startTimeNano));
 				
 				// TODO get from json column config
-				System.out.println(indexColumnMap.get(0));
-				System.out.println(indexColumnMap.get(1));
-				System.out.println(indexColumnMap.get(2));
-				System.out.println(indexColumnMap.get(3));
-				System.out.println(indexColumnMap.get(4));
+				LogEntry le = new LogEntry();
 				
-				System.out.println(lineList.get(0));
-				System.out.println(lineList.get(1));
-				System.out.println(lineList.get(2));
-				System.out.println(lineList.get(3));
-				System.out.println(lineList.get(4));
-				System.out.println(lineList.size());
-				System.exit(0);
+				le.setIp(indexColumnMap.get(configMap.get("ipv4")));
+				le.setRequest(indexColumnMap.get(configMap.get("request")));
+				le.setUserAgent(indexColumnMap.get(configMap.get("userAgent")));
+				try {
+					le.setDate(sdf.parse(indexColumnMap.get(configMap.get("date"))));
+				} catch (ParseException pe) { System.err.println("Error parsing date in this log line: " + line); pe.printStackTrace();}
+				try {
+					le.setStatus(Integer.parseInt(indexColumnMap.get(configMap.get("status"))));
+				} catch (NumberFormatException nfe) { System.err.println("Error parsing status number in this log line: " + line); nfe.printStackTrace(); }
+				
+				le.setCompleteLine(line);
+				
+				if(!ipCounter.containsKey(le.getIp())) {
+					ipCounter.put(le.getIp(), 1);
+				} else {
+					ipCounter.put(le.getIp(), ipCounter.get(le.getIp()) + 1);
+				}
+				
+//				System.out.println(le);
+				
+//				System.exit(0);
 				
 			}
+			System.out.println("actual parsing " + (System.currentTimeMillis() - startTime));
+			
+			for (Entry<String, Integer> entry : ipCounter.entrySet()) {
+				Integer value = entry.getValue();
+				if(value > this.threshold) {
+					System.out.println(entry.getKey());
+					System.out.println(value);
+				}
+				
+			}
+			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			throw e;
@@ -161,6 +233,11 @@ public class Parser {
 			} else {
 				// default value is 100
 				parserBuilder.threshold("100");
+			}
+			if(argumentsMap.containsKey("jsonConfig")) {
+				parserBuilder.filePath(argumentsMap.get("jsonConfig"));
+			} else {
+				parserBuilder.filePath("src/com/ef/config.json");
 			}
 			// TODO handle errors
 		} catch (FileNotFoundException e1) {
