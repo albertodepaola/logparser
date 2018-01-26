@@ -7,28 +7,25 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
-import com.albertodepaola.logparser.model.LogEntry;
+import com.albertodepaola.logparser.model.BlockedIp;
 
-public class LogEntryDAOImpl extends DBRepository<LogEntry> {
+public class BlockedIpDAOImpl extends DBRepository<BlockedIp> {
 
-	private static final String SQL_INSERT = "insert into log_entry (ipv4, date, request, status, userAgent, completeLine, logFile) values (?, ?, ?, ?, ?, ?, ?)";
-	
+	private static final String SQL_INSERT = "insert into blocked_ip (logFile, ipv4, description, ocurrences, updateTime) values (?, ?, ?, ?, ?)";
 
-	public LogEntry insert(LogEntry entity) {
-		// TODO Auto-generated method stub
+	public BlockedIp insert(BlockedIp entity) {
 		PreparedStatement ps = null;
 		try {
-			// TODO map the entity to prepared statemnt
+			// TODO map the entity to prepared statemnt based on configuration file
 			ps = getConnection().prepareStatement(SQL_INSERT);
-			ps.setString(1, entity.getIp());
-			ps.setDate(2, new java.sql.Date(entity.getDate().getTime()));
-			ps.setString(3, entity.getRequest());
-			ps.setInt(4, entity.getStatus());
-			ps.setString(5, entity.getUserAgent());
-			ps.setString(6, entity.getCompleteLine());
-			ps.setLong(7, entity.getLogFile().getId());
+			ps.setLong(1, entity.getLogFile().getId());
+			ps.setString(2, entity.getIp());
+			ps.setString(3, entity.getDescription());
+			ps.setInt(4, entity.getOcurrences());
+			ps.setDate(5, new java.sql.Date(new Date().getTime()));
 			
 			boolean isResultSet = ps.execute();
 			if(isResultSet) {
@@ -59,13 +56,13 @@ public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 		return null;
 	}
 
-	public List<LogEntry> listAll() throws SQLException {
+	public List<BlockedIp> listAll() throws SQLException {
 		
 		try (Statement stmt = getConnection().createStatement();) {
 			// TODO sacar el limit, por ahora queda para ir de a dos
 			
-			ResultSet rs = stmt.executeQuery("select * from log_entry");
-			List<LogEntry> logEntries = new ArrayList<>();
+			ResultSet rs = stmt.executeQuery("select * from blocked_ip");
+			List<BlockedIp> logEntries = new ArrayList<>();
 			while (rs.next()) {
 				// TODO MAP result set to object
 				/*				
@@ -75,11 +72,11 @@ public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 			}
 			return logEntries;
 		} catch (SQLException e) {
-			throw new SQLException("Error loading log entries", e);
+			throw new SQLException("Error loading blocked ips", e);
 		}
 	}
 	
-	public void insertBatch(Collection<LogEntry> logEntries) throws SQLException {
+	public void insertBatch(Collection<BlockedIp> logEntries) throws SQLException {
 		
 		try (
 		        Connection connection = getConnection();
@@ -87,14 +84,12 @@ public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 		    ) {
 		        int i = 0;
 
-		        for (LogEntry entity : logEntries) {
-		        	ps.setString(1, entity.getIp());
-					ps.setDate(2, new java.sql.Date(entity.getDate().getTime()));
-					ps.setString(3, entity.getRequest());
-					ps.setInt(4, entity.getStatus());
-					ps.setString(5, entity.getUserAgent());
-					ps.setString(6, entity.getCompleteLine());
-					ps.setLong(7, entity.getLogFile().getId());
+		        for (BlockedIp entity : logEntries) {
+		        	ps.setLong(1, entity.getLogFile().getId());
+					ps.setString(2, entity.getIp());
+					ps.setString(3, entity.getDescription());
+					ps.setInt(4, entity.getOcurrences());
+					ps.setDate(5, new java.sql.Date(new Date().getTime()));
 					
 					ps.addBatch();
 					ps.clearParameters();
@@ -112,12 +107,14 @@ public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 		
 	}
 	
-	public LogEntry update(LogEntry entity) {
+	@Override
+	public BlockedIp update(BlockedIp entity) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public Boolean delete(LogEntry entity) {
+	@Override
+	public Boolean delete(BlockedIp entity) {
 		// TODO Auto-generated method stub
 		return null;
 	}

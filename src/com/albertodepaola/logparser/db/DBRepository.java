@@ -10,6 +10,7 @@ import java.util.List;
 public abstract class DBRepository<T> {
 	public static Connection getConnection() throws SQLException {
 		// TODO pasar a confirutacion, usar tables.json existente
+		// return DriverManager.getConnection("jdbc:mysql://localhost:3306/logparser?user=root&password=rootroot&rewriteBatchedStatements=true");
 		return DriverManager.getConnection("jdbc:mysql://localhost:3306/logparser?user=root&password=rootroot&rewriteBatchedStatements=true");
 	}
 

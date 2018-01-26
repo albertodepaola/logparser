@@ -11,6 +11,21 @@ public class LogFile {
 	private DURATION duration;
 	private Integer threshold;
 	private Date processDate;
+	private String md5;
+
+	public LogFile() {
+
+	}
+
+	public LogFile(File accessLog, Date startDate, DURATION duration, Integer threshold, Date processDate) {
+		super();
+		this.accessLog = accessLog;
+		this.startDate = startDate;
+		this.duration = duration;
+		this.threshold = threshold;
+		this.processDate = processDate;
+
+	}
 
 	public Long getId() {
 		return id;
@@ -58,6 +73,14 @@ public class LogFile {
 
 	public void setProcessDate(Date processDate) {
 		this.processDate = processDate;
+	}
+
+	public String getMd5() {
+		return md5;
+	}
+
+	public void setMd5(String md5) {
+		this.md5 = md5;
 	}
 
 }

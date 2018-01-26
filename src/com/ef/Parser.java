@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
-import java.lang.reflect.Type;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -16,16 +15,17 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import com.albertodepaola.logparser.db.BlockedIpDAOImpl;
 import com.albertodepaola.logparser.db.LogEntryDAOImpl;
+import com.albertodepaola.logparser.db.LogFileDAOImpl;
+import com.albertodepaola.logparser.model.BlockedIp;
 import com.albertodepaola.logparser.model.Configuration;
 import com.albertodepaola.logparser.model.DURATION;
 import com.albertodepaola.logparser.model.LogEntry;
 import com.albertodepaola.logparser.model.LogFile;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.albertodepaola.logparser.model.ParseResult;
 
 public class Parser {
 
@@ -34,6 +34,7 @@ public class Parser {
 	private DURATION duration;
 	private Integer threshold;
 	private Map<String, Integer> configMap;
+	private static Configuration configuration;
 
 	private Parser(ParserBuilder builder) {
 		this.accesslog = builder.accesslog;
@@ -86,76 +87,42 @@ public class Parser {
 			return this;
 		}
 		
-		public ParserBuilder filePath(String configFilePath) throws FileNotFoundException {
-			File f = new File(configFilePath);
-			if (f.exists()) {
-				Gson g = new Gson();
-				FileReader fr = new FileReader(f);
-
-				Type type = new TypeToken<HashMap<String, Integer>>() {}.getType();
-
-//				HashMap<String, Integer> configMap = g.fromJson(fr, type);
-				Configuration c = g.fromJson(fr, Configuration.class);
-				this.configMap = c.getConfiguration();
-			} else
-				throw new FileNotFoundException("The file " + f.getAbsolutePath() + " does not exist");
-			
-			return this;
+		public void configMap(Map<String, Integer> configMap) {
+			this.configMap = configMap;
 		}
-
+		
 		public Parser build() {
 			return new Parser(this);
 		}
 
-
-
 	}
 	
-	private List<LogEntry> parse() throws IOException {
+	private ParseResult parse() throws IOException {
 		
 		Reader reader = null;
 		LineNumberReader lnr = null;
 		List<LogEntry> logEntries = new ArrayList<>();
-		// TODO receive as parameter
-		LogFile lf = new LogFile();
-		lf.setId(1l);
+		Map<String, Integer> ipCounter = new HashMap<>();
+		Map<String, BlockedIp> blockedIpsMap = new HashMap<>();
+		
+		
 		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+			SimpleDateFormat sdf = Configuration.getConfiguration().getFormater();
 			reader = new FileReader(this.accesslog);
 			lnr = new LineNumberReader(reader);
 			String line = null;
-			Map<String, Integer> ipCounter = new HashMap<>();
-			long startTime = System.currentTimeMillis();
-//			long startTimeNano = System.nanoTime();
+			
+			Date endDate = duration.getEndDate(startDate);
 			while((line = lnr.readLine()) != null) {
 				
-//				System.out.println(startTime);
 				List<String> lineList = Arrays.asList(line.split("\\|"));
-//				System.out.println("Array Split time: " + (System.currentTimeMillis() - startTime));
-//				System.out.println("Array Split time: " + (System.nanoTime() - startTimeNano));
 				
-//				startTime = System.currentTimeMillis();
-//				startTimeNano = System.nanoTime();
-				// not used because of performance issues
-				/*
-				Map<Integer, String> indexColumnMap = IntStream.range(0, lineList.size())
-		         .boxed()
-		         .collect(toMap(i -> i, lineList::get));
-				*/
-//				System.out.println("Collect to Map time: " + (System.currentTimeMillis() - startTime));
-//				System.out.println("Collect to Map time: " + (System.nanoTime() - startTimeNano));
-				
-//				startTime = System.currentTimeMillis();
-//				startTimeNano = System.nanoTime();
 				Map<Integer, String> indexColumnMap = new HashMap<>();
 				int count = 0;
 				for (String string : lineList) {
 					indexColumnMap.put(count++, string);
 				}
-//				System.out.println("Collect to Map time: " + (System.currentTimeMillis() - startTime));
-//				System.out.println("Collect to Map time: " + (System.nanoTime() - startTimeNano));
 				
-				// TODO get from json column config
 				LogEntry le = new LogEntry();
 				
 				le.setIp(indexColumnMap.get(configMap.get("ipv4")));
@@ -169,18 +136,37 @@ public class Parser {
 				} catch (NumberFormatException nfe) { System.err.println("Error parsing status number in this log line: " + line); nfe.printStackTrace(); }
 				
 				le.setCompleteLine(line);
-				le.setLogFile(lf);
 				logEntries.add(le);
 				
-				if(!ipCounter.containsKey(le.getIp())) {
-					ipCounter.put(le.getIp(), 1);
-				} else {
-					ipCounter.put(le.getIp(), ipCounter.get(le.getIp()) + 1);
+				// only this ips should go to the second table.
+				// TODO change return type to map
+				if(le.getDate().after(startDate) && le.getDate().before(endDate)) {
+					if(!ipCounter.containsKey(le.getIp())) {
+						ipCounter.put(le.getIp(), 1);
+					} else {
+						int ocurrences = ipCounter.get(le.getIp()) + 1;
+						ipCounter.put(le.getIp(), ocurrences);
+						
+						if(ocurrences > this.threshold) {
+							if(!blockedIpsMap.containsKey(le.getIp())) {
+								// if not on map, creates the instance
+								blockedIpsMap.put(le.getIp(), new BlockedIp(le));
+							} else {
+								// if already on map, updates it ocurrence count 
+								blockedIpsMap.get(le.getIp()).setOcurrences(ocurrences);
+							}
+						}
+					}
 				}
 				
 			}
-			System.out.println("actual parsing " + (System.currentTimeMillis() - startTime));
 			
+			for (BlockedIp blockedIp : blockedIpsMap.values()) {
+				String blockedIpDescription = blockedIp.toString() + " between " + sdf.format(startDate) + " and " + sdf.format(endDate);
+				blockedIp.setDescription(blockedIpDescription);
+				System.out.println(blockedIp.getDescription());
+			}
+			/*
 			for (Entry<String, Integer> entry : ipCounter.entrySet()) {
 				Integer value = entry.getValue();
 				if(value > this.threshold) {
@@ -189,7 +175,9 @@ public class Parser {
 				}
 				
 			}
-			return logEntries;
+			*/
+			
+			return new ParseResult(logEntries, ipCounter, blockedIpsMap);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			throw e;
@@ -207,13 +195,10 @@ public class Parser {
 					lnr.close();
 				} catch (IOException ioe) { } // silence close exception
 			}
-			
 		}
-		
-		
 	}
 
-	private static Parser createParser(Map<String, String> argumentsMap) {
+	private static Parser createParser(Map<String, String> argumentsMap, Map<String, Integer> configMap) {
 		ParserBuilder parserBuilder = null;
 		// TODO use reflection to simply iterate over map to initialize parser
 		try {
@@ -237,14 +222,14 @@ public class Parser {
 			if (argumentsMap.containsKey("threshold")) {
 				parserBuilder.threshold(argumentsMap.get("threshold"));
 			} else {
-				// default value is 100
-				parserBuilder.threshold("100");
+				// default value is 200 for hourly and 500 for daily
+				if(parserBuilder.duration.equals(DURATION.HOURLY)) {
+					parserBuilder.threshold("200");
+				} else {
+					parserBuilder.threshold("500");
+				}
 			}
-			if(argumentsMap.containsKey("jsonConfig")) {
-				parserBuilder.filePath(argumentsMap.get("jsonConfig"));
-			} else {
-				parserBuilder.filePath("src/com/ef/config.json");
-			}
+			parserBuilder.configMap(configMap);
 			// TODO handle errors
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
@@ -257,38 +242,82 @@ public class Parser {
 		return parser;
 	}
 	
+	public File getAccesslog() {
+		return accesslog;
+	}
+
+	public Date getStartDate() {
+		return startDate;
+	}
+
+	public DURATION getDuration() {
+		return duration;
+	}
+
+	public Integer getThreshold() {
+		return threshold;
+	}
+
+	public Map<String, Integer> getConfigMap() {
+		return configMap;
+	}
+
+	public static Configuration getConfiguration() {
+		return configuration;
+	}
+
 	public static void main(String[] args) {
 		
-		Map<String, String> argumentsMap = 
-				Arrays.asList(args)
-				.stream()
-				.map(elem -> elem.split("="))
-				.collect(Collectors.toMap(e -> e[0].replace("--", ""), e -> e[1]));
-
-		// TODO validate help and optional parameters
-		
-		Parser parser = createParser(argumentsMap);
-		
 		try {
-			// TODO set LogFile 
-			List<LogEntry> parse = parser.parse();
-			// inserting in database
-			/*
-			for (LogEntry logEntry : parse) {
-				LogEntryDAOImpl logEntryDAO = new LogEntryDAOImpl();
-				logEntryDAO.insert(logEntry);
-				// System.exit(1);
+			Map<String, String> argumentsMap = 
+					Arrays.asList(args)
+					.stream()
+					.map(elem -> elem.split("="))
+					.collect(Collectors.toMap(e -> e[0].replace("--", ""), e -> e[1]));
+
+			// TODO validate help and optional parameters
+			
+			String configFilePath;
+			
+			if(argumentsMap.containsKey("jsonConfig")) {
+				configFilePath = argumentsMap.get("jsonConfig");
+			} else {
+				configFilePath = "src/com/ef/config.json";
 			}
-			*/
-			LogEntryDAOImpl logEntryDAO = new LogEntryDAOImpl();
-			logEntryDAO.insert(parse);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-			// TODO log error
-		} catch (SQLException e1) {
-			e1.printStackTrace();
-			// TODO log error
+			
+			Configuration.loadConfigurationFromJsonFile(configFilePath);
+			
+			Parser parser = createParser(argumentsMap, Configuration.getConfiguration().getLogConfiguration());
+			
+			try {
+				// TODO set LogFile 
+				LogFile lf = new LogFile(parser.getAccesslog(), parser.getStartDate(), parser.getDuration(), parser.getThreshold(), new Date());
+				LogFileDAOImpl logFileDAO = new LogFileDAOImpl();
+				logFileDAO.insert(lf);
+				ParseResult parseResult = parser.parse();
+				
+				
+				if(Configuration.getConfiguration().getSaveLogToDatabase()) {
+					// inserting in database
+					// TODO change to IoC container
+					LogEntryDAOImpl logEntryDAO = new LogEntryDAOImpl();
+					logEntryDAO.insertBatch(parseResult.getLogEntries());
+					BlockedIpDAOImpl blockedIpDAO = new BlockedIpDAOImpl();
+					blockedIpDAO.insertBatch(parseResult.getBlockedIps().values());
+				}
+			} catch (IOException e1) {
+				e1.printStackTrace();
+				// TODO log error
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+				// TODO log error
+			}
+		} catch (Exception e) {
+			System.err.println("Error while executing Log Parser");
+			e.printStackTrace();
 		}
+		
+		
 
 
 	}

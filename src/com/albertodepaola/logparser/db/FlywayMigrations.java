@@ -13,7 +13,7 @@ public class FlywayMigrations {
 // 		DriverManager.getConnection("jdbc:mysql://localhost:3306/logparser?" + "user=root&password=");
 		
         // Point it to the database
-        flyway.setDataSource("jdbc:mysql://localhost:3306/logparser", "root", "");
+        flyway.setDataSource("jdbc:mysql://localhost:3306/logparser", "root", "rootroot");
 
         flyway.setLocations("classpath:com.albertodepaola.logparser.db.migrations");
         

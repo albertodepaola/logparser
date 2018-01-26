@@ -13,8 +13,9 @@ public class LogEntry {
 	private Integer status;
 	private String userAgent;
 	private String completeLine;
+	private String description;
 	private LogFile logFile;
-	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+	
 
 	public Long getId() {
 		return id;
@@ -80,6 +81,14 @@ public class LogEntry {
 		this.completeLine = completeLine;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
 	public LogFile getLogFile() {
 		return logFile;
 	}
@@ -91,7 +100,7 @@ public class LogEntry {
 	@Override
 	public String toString(){
 		// TODO use bean utils
-		return this.ip + " - " + sdf.format(this.date) + " : " + this.completeLine;
+		return this.getIp() + " - " + Configuration.getConfiguration().getFormater().format(this.date) + " : " + this.completeLine;
 	}
 
 }
