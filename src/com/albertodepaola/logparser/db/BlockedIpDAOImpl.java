@@ -19,10 +19,10 @@ public class BlockedIpDAOImpl extends DBRepository<BlockedIp> {
 	private static final String SQL_INSERT = "insert into blocked_ip (logFile, ipv4, description, ocurrences, updateTime) values (?, ?, ?, ?, ?)";
 
 	public BlockedIp insert(BlockedIp entity) {
-		PreparedStatement ps = null;
-		try {
+		
+		try (PreparedStatement ps = getConnection().prepareStatement(SQL_INSERT)) {
+			
 			// TODO map the entity to prepared statemnt based on configuration file
-			ps = getConnection().prepareStatement(SQL_INSERT);
 			ps.setLong(1, entity.getLogFile().getId());
 			ps.setString(2, entity.getIp());
 			ps.setString(3, entity.getDescription());
@@ -48,13 +48,7 @@ public class BlockedIpDAOImpl extends DBRepository<BlockedIp> {
 			// TODO: handle exception
 			e.printStackTrace();
 			
-		} finally {
-			if(ps != null) {
-				try {
-					ps.close();
-				} catch (SQLException e) { } // silence exception on close 
-			}
-		}
+		} 
 		return null;
 	}
 

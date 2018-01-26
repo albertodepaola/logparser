@@ -11,6 +11,7 @@
 	"databaseConfiguration": {
 		"url": "jdbc:mysql://localhost",
 		"port": "3306",
+		"database": "logparser",
 		"user": "root",
 		"password": "rootroot",
 		"aditionalParameters": "&rewriteBatchedStatements=true"
