@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- WARNING: Eclipse auto-generated file.
-              Any modifications will be overwritten.
-              To include a user specific buildfile here, simply create one in the same
-              directory with the processing instruction <?eclipse.ant.import?>
-              as the first entry and export the buildfile again. -->
 <project basedir="." default="build" name="LogParser">
 
     <property environment="env"/>
@@ -33,7 +28,8 @@
         </copy>
     </target>
     <target name="clean">
-        <delete dir="bin"/>
+        <delete dir="${build.dir}"/>
+    	<delete dir="${dist.dir}"/>
     </target>
     <target depends="clean" name="cleanall"/>
     <target depends="build-subprojects,build-project" name="build"/>
@@ -74,25 +70,14 @@
   		</jar>
 
   	</target>          
-    <target name="buildJar" depends="build, copy-dependencies" description="Builds the jar with dependecies">
-         
+    <target name="build-jar" depends="build, copy-dependencies" description="Builds the jar with dependecies">
 
         <mkdir dir="${dist.dir}" />
 		<mkdir dir="${dist.lib.dir}" />
               	
 	  	<jar destfile="${dist.dir}/parser.jar" basedir="${build.dir}">
-	  	    <include name="build"/>
-	  	    <manifest>
-				<attribute name="Main-Class" value="${main.class}" />
-				<attribute name="Permissions" value="sandbox"/>
-				<attribute name="Codebase" value="com.ef"/>
-				<attribute name="Built-By" value="${user.name}"/>
-				<attribute name="Implementation-Vendor" value="ACME inc."/>
-				<attribute name="Implementation-Title" value="LogParser"/>
-				<attribute name="Implementation-Version" value="0.0.1"/>
-			</manifest>
 	  		<zipfileset src="${dist.lib.dir}/dependencies-all.jar"
-	  		                                excludes="META-INF/*.SF" />
+	  		                                excludes="META-INF/*.SF" />	  		
 		</jar>
     	
     </target>
