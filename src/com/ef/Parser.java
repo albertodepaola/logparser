@@ -106,11 +106,12 @@ public class Parser {
 		
 		try (Reader reader = new FileReader(this.accesslog);
 				LineNumberReader lnr = new LineNumberReader(reader);){
+			
 			SimpleDateFormat sdf = Configuration.getConfiguration().getFormater();
-			
-			String line = null;
-			
 			Date endDate = duration.getEndDate(startDate);
+
+			// read file to the end with buffered line reader
+			String line = null;
 			while((line = lnr.readLine()) != null) {
 				
 				List<String> lineList = Arrays.asList(line.split("\\|"));
@@ -123,6 +124,8 @@ public class Parser {
 				
 				LogEntry le = new LogEntry();
 				
+				// reads from log file to object based on index defined in config file.
+				// TODO for full configurability the object should be as defined in config file
 				le.setIp(indexColumnMap.get(configMap.get("ipv4")));
 				le.setRequest(indexColumnMap.get(configMap.get("request")));
 				le.setUserAgent(indexColumnMap.get(configMap.get("userAgent")));
@@ -133,6 +136,7 @@ public class Parser {
 					le.setStatus(Integer.parseInt(indexColumnMap.get(configMap.get("status"))));
 				} catch (NumberFormatException nfe) { System.err.println("Error parsing status number in this log line: " + line); nfe.printStackTrace(); }
 				
+				// saves the whole line for posible future use
 				le.setCompleteLine(line);
 				logEntries.add(le);
 				
@@ -141,16 +145,16 @@ public class Parser {
 					if(!ipCounter.containsKey(le.getIp())) {
 						ipCounter.put(le.getIp(), 1);
 					} else {
-						int ocurrences = ipCounter.get(le.getIp()) + 1;
-						ipCounter.put(le.getIp(), ocurrences);
+						int occurrences = ipCounter.get(le.getIp()) + 1;
+						ipCounter.put(le.getIp(), occurrences);
 						
-						if(ocurrences > this.threshold) {
+						if(occurrences > this.threshold) {
 							if(!blockedIpsMap.containsKey(le.getIp())) {
 								// if not on map, creates the instance
 								blockedIpsMap.put(le.getIp(), new BlockedIp(le));
 							} else {
-								// if already on map, updates it ocurrence count 
-								blockedIpsMap.get(le.getIp()).setOcurrences(ocurrences);
+								// if already on map, updates it occurrence count 
+								blockedIpsMap.get(le.getIp()).setOccurrences(occurrences);
 							}
 						}
 					}

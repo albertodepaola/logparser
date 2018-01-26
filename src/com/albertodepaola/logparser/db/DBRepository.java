@@ -21,12 +21,12 @@ public abstract class DBRepository<T> {
 		return DriverManager.getConnection(connectionString);
 	}
 
-	public abstract T insert(T entity);
+	public abstract T insert(T entity) throws SQLException;
 
 	public abstract List<T> listAll() throws SQLException;
 
-	public abstract T update(T entity);
+	public abstract T update(T entity) throws SQLException;
 
-	public abstract Boolean delete(T entity);
+	public abstract Boolean delete(T entity) throws SQLException;
 
 }

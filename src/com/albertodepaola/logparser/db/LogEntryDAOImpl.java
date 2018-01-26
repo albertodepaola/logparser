@@ -5,7 +5,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -18,12 +17,10 @@ public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 	private static final String SQL_INSERT = "insert into log_entry (ipv4, date, request, status, userAgent, completeLine, logFile) values (?, ?, ?, ?, ?, ?, ?)";
 	
 
-	public LogEntry insert(LogEntry entity) {
-		// TODO Auto-generated method stub
-		PreparedStatement ps = null;
-		try {
+	public LogEntry insert(LogEntry entity) throws SQLException {
+
+		try (PreparedStatement ps = getConnection().prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS)){
 			// TODO map the entity to prepared statemnt
-			ps = getConnection().prepareStatement(SQL_INSERT);
 			ps.setString(1, entity.getIp());
 			ps.setDate(2, new java.sql.Date(entity.getDate().getTime()));
 			ps.setString(3, entity.getRequest());
@@ -32,53 +29,21 @@ public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 			ps.setString(6, entity.getCompleteLine());
 			ps.setLong(7, entity.getLogFile().getId());
 			
-			boolean isResultSet = ps.execute();
-			if(isResultSet) {
-				ResultSet resultSet = ps.getResultSet();
-				if(resultSet.next()) {
-					System.out.println(resultSet.getString(1));
-					System.out.println(resultSet.getString(2));
-					System.out.println(resultSet.getString(3));
-				} else {
-					System.out.println("Empty result set");
-				}
-			} else {
-				int updateCount = ps.getUpdateCount();
-				System.out.println("Update count: " + updateCount);
-			}
+			ps.execute();
+			ResultSet generatedKeys = ps.getGeneratedKeys();
+			if(generatedKeys.next()) {
+				entity.setId(generatedKeys.getLong(1));
+			} 
 			
-		} catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
+		} catch (SQLException e) {
+			throw new SQLException("Error inserting log entry.", e);
 			
-		} finally {
-			if(ps != null) {
-				try {
-					ps.close();
-				} catch (SQLException e) { } // silence exception on close 
-			}
-		}
-		return null;
+		} 
+		return entity;
 	}
 
 	public List<LogEntry> listAll() throws SQLException {
-		
-		try (Statement stmt = getConnection().createStatement();) {
-			// TODO sacar el limit, por ahora queda para ir de a dos
-			
-			ResultSet rs = stmt.executeQuery("select * from log_entry");
-			List<LogEntry> logEntries = new ArrayList<>();
-			while (rs.next()) {
-				// TODO MAP result set to object
-				/*				
-				logEntries.add(new LogEntry(rs.getString("APP_UID"), rs.getString("APP_NUMBER"), new File("empty"),
-						rs.getString("APP_UID")));
-				*/
-			}
-			return logEntries;
-		} catch (SQLException e) {
-			throw new SQLException("Error loading log entries", e);
-		}
+		return null;
 	}
 	
 	public void insertBatch(Collection<LogEntry> logEntries, LogFile lf) throws SQLException {
@@ -104,7 +69,6 @@ public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 					i++;
 					if(i % Configuration.getConfiguration().getBatchSize() == 0 || i == logEntries.size()) {
 						ps.executeBatch();
-						// TODO verify result
 					}
 		        }
 		} catch (SQLException e) {

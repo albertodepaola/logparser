@@ -5,7 +5,7 @@ public class BlockedIp {
 	private Long id;
 	private String ip;
 	private String ipv6;
-	private Integer ocurrences = 1;
+	private Integer occurrences = 1;
 	private String description;
 	private LogFile logFile;
 
@@ -40,12 +40,12 @@ public class BlockedIp {
 		this.ipv6 = ipv6;
 	}
 
-	public Integer getOcurrences() {
-		return ocurrences;
+	public Integer getOccurrences() {
+		return occurrences;
 	}
 
-	public void setOcurrences(Integer ocurrences) {
-		this.ocurrences = ocurrences;
+	public void setOccurrences(Integer occurrences) {
+		this.occurrences = occurrences;
 	}
 
 	public String getDescription() {
@@ -67,11 +67,7 @@ public class BlockedIp {
 	@Override
 	public String toString(){
 		// TODO use bean utils
-		return this.getIp() + " made " + this.getOcurrences() + " requests";
-	}
-
-	public void addOccurence() {
-		this.ocurrences++;
+		return this.getIp() + " made " + this.getOccurrences() + " requests";
 	}
 
 }

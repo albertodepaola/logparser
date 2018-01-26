@@ -9,8 +9,6 @@ public class FlywayMigrations {
 	public static void main(String[] args) throws SQLException {
 
 		Flyway flyway = new Flyway();
-
-// 		DriverManager.getConnection("jdbc:mysql://localhost:3306/logparser?" + "user=root&password=");
 		
         // Point it to the database
         flyway.setDataSource("jdbc:mysql://localhost:3306/logparser", "root", "rootroot");

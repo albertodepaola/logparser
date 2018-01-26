@@ -1,4 +1,4 @@
--- Filters a certain datetime range in the subquery and a number of ocurrences in the outer query. 
+-- Filters a certain datetime range in the subquery and a number of occurrences in the outer query. 
 select a.* from (
 	select count(ipv4) as requests, ipv4, logFile 
 	from log_entry le
