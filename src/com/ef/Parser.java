@@ -99,17 +99,15 @@ public class Parser {
 	
 	private ParseResult parse() throws IOException {
 		
-		Reader reader = null;
-		LineNumberReader lnr = null;
 		List<LogEntry> logEntries = new ArrayList<>();
 		Map<String, Integer> ipCounter = new HashMap<>();
 		Map<String, BlockedIp> blockedIpsMap = new HashMap<>();
 		
 		
-		try {
+		try (Reader reader = new FileReader(this.accesslog);
+				LineNumberReader lnr = new LineNumberReader(reader);){
 			SimpleDateFormat sdf = Configuration.getConfiguration().getFormater();
-			reader = new FileReader(this.accesslog);
-			lnr = new LineNumberReader(reader);
+			
 			String line = null;
 			
 			Date endDate = duration.getEndDate(startDate);
@@ -139,7 +137,6 @@ public class Parser {
 				logEntries.add(le);
 				
 				// only this ips should go to the second table.
-				// TODO change return type to map
 				if(le.getDate().after(startDate) && le.getDate().before(endDate)) {
 					if(!ipCounter.containsKey(le.getIp())) {
 						ipCounter.put(le.getIp(), 1);
@@ -166,16 +163,6 @@ public class Parser {
 				blockedIp.setDescription(blockedIpDescription);
 				System.out.println(blockedIp.getDescription());
 			}
-			/*
-			for (Entry<String, Integer> entry : ipCounter.entrySet()) {
-				Integer value = entry.getValue();
-				if(value > this.threshold) {
-					System.out.println(entry.getKey());
-					System.out.println(value);
-				}
-				
-			}
-			*/
 			
 			return new ParseResult(logEntries, ipCounter, blockedIpsMap);
 		} catch (FileNotFoundException e) {
@@ -184,18 +171,7 @@ public class Parser {
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw e;
-		} finally {
-			if(reader != null) {
-				try {
-					reader.close();
-				} catch (IOException ioe) { } // silence close exception
-			}
-			if(lnr != null) {
-				try {
-					lnr.close();
-				} catch (IOException ioe) { } // silence close exception
-			}
-		}
+		} 
 	}
 
 	private static Parser createParser(Map<String, String> argumentsMap, Map<String, Integer> configMap) {
@@ -205,10 +181,16 @@ public class Parser {
 			if (argumentsMap.containsKey("accesslog")) {
 				parserBuilder = new Parser.ParserBuilder(argumentsMap.get("accesslog"));
 			} else {
-				// TODO mandatory argument, throw exception?
+				throw new RuntimeException("No log file config in argument list. ");
 			}
 			if (argumentsMap.containsKey("startDate")) {
-				parserBuilder.startDate(argumentsMap.get("startDate"));
+				try {
+					parserBuilder.startDate(argumentsMap.get("startDate"));
+				} catch (ParseException e1) {
+					System.err.println("Error parsing date. The valid format is yyyy-MM-dd.HH:mm:ss. Default value new Date() used.");
+					e1.printStackTrace();
+					parserBuilder.startDate(new Date());
+				}
 			} else {
 				// default value is now
 				parserBuilder.startDate(new Date());
@@ -216,7 +198,7 @@ public class Parser {
 			if (argumentsMap.containsKey("duration")) {
 				parserBuilder.duration(argumentsMap.get("duration"));
 			} else {
-				// default value is hourly, to work less
+				// default value is hourly
 				parserBuilder.duration(DURATION.HOURLY);
 			}
 			if (argumentsMap.containsKey("threshold")) {
@@ -230,13 +212,10 @@ public class Parser {
 				}
 			}
 			parserBuilder.configMap(configMap);
-			// TODO handle errors
 		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		} catch (ParseException e1) {
-			System.err.println("Error parsing date. The valid format is yyyy-MM-dd.HH:mm:ss");
-			e1.printStackTrace();
-		}
+			System.err.println("Log file not found, terminating.");
+			throw new RuntimeException(e1);
+		} 
 
 		Parser parser = parserBuilder.build();
 		return parser;
@@ -320,9 +299,6 @@ public class Parser {
 			e.printStackTrace();
 		}
 		
-		
-
-
 	}
 
 }
