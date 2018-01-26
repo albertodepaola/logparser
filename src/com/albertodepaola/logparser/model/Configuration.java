@@ -17,6 +17,7 @@ public class Configuration {
 	private Map<String, String> databaseConfiguration;
 	private String simpleDateFormat;
 	private static SimpleDateFormat sdf;
+	private Integer batchSize;
 
 	public String getDocumentation() {
 		return documentation;
@@ -64,6 +65,14 @@ public class Configuration {
 	
 	public SimpleDateFormat getFormater() {
 		return sdf;
+	}
+
+	public Integer getBatchSize() {
+		return batchSize;
+	}
+
+	public void setBatchSize(Integer batchSize) {
+		this.batchSize = batchSize;
 	}
 
 	public static void loadConfigurationFromJsonFile(String jsonFilePath) throws FileNotFoundException {

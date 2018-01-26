@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.albertodepaola.logparser.model.Configuration;
 import com.albertodepaola.logparser.model.LogEntry;
 import com.albertodepaola.logparser.model.LogFile;
 
@@ -101,8 +102,7 @@ public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 					ps.addBatch();
 					ps.clearParameters();
 					i++;
-					if(i % 10000 == 0 || i == logEntries.size()) {
-						System.out.println("batch: " + i);
+					if(i % Configuration.getConfiguration().getBatchSize() == 0 || i == logEntries.size()) {
 						ps.executeBatch();
 						// TODO verify result
 					}

@@ -15,7 +15,8 @@
 		"password": "rootroot",
 		"aditionalParameters": "&rewriteBatchedStatements=true"
 	},
-	"simpleDateFormat": "yyyy-MM-dd HH:mm:ss.S"
+	"simpleDateFormat": "yyyy-MM-dd HH:mm:ss.S",
+	"batchSize": "10000"
 		
 	
 }

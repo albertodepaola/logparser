@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.albertodepaola.logparser.model.BlockedIp;
+import com.albertodepaola.logparser.model.Configuration;
 import com.albertodepaola.logparser.model.LogFile;
 
 public class BlockedIpDAOImpl extends DBRepository<BlockedIp> {
@@ -96,8 +97,7 @@ public class BlockedIpDAOImpl extends DBRepository<BlockedIp> {
 					ps.addBatch();
 					ps.clearParameters();
 					i++;
-					if(i % 1000 == 0 || i == logEntries.size()) {
-						System.out.println("batch: " + i);
+					if(i % Configuration.getConfiguration().getBatchSize() == 0 || i == logEntries.size()) {
 						ps.executeBatch();
 						// TODO verify result
 					}
