@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.albertodepaola.logparser.model.BlockedIp;
+import com.albertodepaola.logparser.model.LogFile;
 
 public class BlockedIpDAOImpl extends DBRepository<BlockedIp> {
 
@@ -76,7 +77,7 @@ public class BlockedIpDAOImpl extends DBRepository<BlockedIp> {
 		}
 	}
 	
-	public void insertBatch(Collection<BlockedIp> logEntries) throws SQLException {
+	public void insertBatch(Collection<BlockedIp> logEntries, LogFile lf) throws SQLException {
 		
 		try (
 		        Connection connection = getConnection();
@@ -85,7 +86,8 @@ public class BlockedIpDAOImpl extends DBRepository<BlockedIp> {
 		        int i = 0;
 
 		        for (BlockedIp entity : logEntries) {
-		        	ps.setLong(1, entity.getLogFile().getId());
+		        	entity.setLogFile(lf);
+		        	ps.setLong(1, lf.getId());
 					ps.setString(2, entity.getIp());
 					ps.setString(3, entity.getDescription());
 					ps.setInt(4, entity.getOcurrences());

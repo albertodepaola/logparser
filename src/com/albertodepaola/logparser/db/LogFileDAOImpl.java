@@ -18,49 +18,32 @@ public class LogFileDAOImpl extends DBRepository<LogFile> {
 
 	public LogFile insert(LogFile entity) {
 		// TODO Auto-generated method stub
-		PreparedStatement ps = null;
-		try {
+		try ( PreparedStatement ps = getConnection().prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {
 			// TODO map the entity to prepared statemnt
-			ps = getConnection().prepareStatement(SQL_INSERT);
+			
 			ps.setDate(1, new java.sql.Date(entity.getStartDate().getTime()));
 			ps.setString(2, entity.getDuration().name());
 			ps.setInt(3, entity.getThreshold());
 			ps.setDate(4, new java.sql.Date(entity.getProcessDate().getTime()));
 			ps.setString(5, entity.getMd5());
 						
-			boolean isResultSet = ps.execute();
+			ps.execute();
 			ResultSet generatedKeys = ps.getGeneratedKeys();
 			if(generatedKeys.next()) {
-				System.out.println(generatedKeys.getLong(1));
+				
+				entity.setId(generatedKeys.getLong(1));
 			} else {
 				System.out.println("No generated keys");
 			}
-			if(isResultSet) {
-				ResultSet resultSet = ps.getResultSet();
-				if(resultSet.next()) {
-					System.out.println(resultSet.getString(1));
-					System.out.println(resultSet.getString(2));
-					System.out.println(resultSet.getString(3));
-				} else {
-					System.out.println("Empty result set");
-				}
-			} else {
-				int updateCount = ps.getUpdateCount();
-				System.out.println("Update count: " + updateCount);
-			}
+			
 			
 		} catch (Exception e) {
-			// TODO: handle exception
+			System.err.println("Error inserting logfile");
 			e.printStackTrace();
 			
-		} finally {
-			if(ps != null) {
-				try {
-					ps.close();
-				} catch (SQLException e) { } // silence exception on close 
-			}
-		}
-		return null;
+		} 
+		
+		return entity;
 	}
 
 	public List<LogFile> listAll() throws SQLException {

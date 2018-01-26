@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.albertodepaola.logparser.model.LogEntry;
+import com.albertodepaola.logparser.model.LogFile;
 
 public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 
@@ -79,7 +80,7 @@ public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 		}
 	}
 	
-	public void insertBatch(Collection<LogEntry> logEntries) throws SQLException {
+	public void insertBatch(Collection<LogEntry> logEntries, LogFile lf) throws SQLException {
 		
 		try (
 		        Connection connection = getConnection();
@@ -88,18 +89,19 @@ public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 		        int i = 0;
 
 		        for (LogEntry entity : logEntries) {
+		        	entity.setLogFile(lf);
 		        	ps.setString(1, entity.getIp());
 					ps.setDate(2, new java.sql.Date(entity.getDate().getTime()));
 					ps.setString(3, entity.getRequest());
 					ps.setInt(4, entity.getStatus());
 					ps.setString(5, entity.getUserAgent());
 					ps.setString(6, entity.getCompleteLine());
-					ps.setLong(7, entity.getLogFile().getId());
+					ps.setLong(7, lf.getId());
 					
 					ps.addBatch();
 					ps.clearParameters();
 					i++;
-					if(i % 1000 == 0 || i == logEntries.size()) {
+					if(i % 10000 == 0 || i == logEntries.size()) {
 						System.out.println("batch: " + i);
 						ps.executeBatch();
 						// TODO verify result

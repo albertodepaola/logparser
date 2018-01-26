@@ -1,7 +1,14 @@
 package com.albertodepaola.logparser.model;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+
+import javax.xml.bind.DatatypeConverter;
 
 public class LogFile {
 
@@ -24,6 +31,19 @@ public class LogFile {
 		this.duration = duration;
 		this.threshold = threshold;
 		this.processDate = processDate;
+		MessageDigest md;
+		try {
+			md = MessageDigest.getInstance("MD5");
+			md.update(Files.readAllBytes(accessLog.toPath()));
+			byte[] digest = md.digest();
+			this.md5 = DatatypeConverter
+					.printHexBinary(digest).toUpperCase();
+			
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 	}
 

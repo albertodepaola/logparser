@@ -7,7 +7,7 @@
 		"status": "3",
 		"userAgent": "4"
 	},
-	"saveLogToDatabase": "false",
+	"saveLogToDatabase": "true",
 	"databaseConfiguration": {
 		"url": "jdbc:mysql://localhost",
 		"port": "3306",

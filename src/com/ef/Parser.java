@@ -291,21 +291,22 @@ public class Parser {
 			
 			try {
 				
+				LogFile lf = null;
 				if(Configuration.getConfiguration().getSaveLogToDatabase()) {
-					LogFile lf = new LogFile(parser.getAccesslog(), parser.getStartDate(), parser.getDuration(), parser.getThreshold(), new Date());
+					lf = new LogFile(parser.getAccesslog(), parser.getStartDate(), parser.getDuration(), parser.getThreshold(), new Date());
 					LogFileDAOImpl logFileDAO = new LogFileDAOImpl();
-					logFileDAO.insert(lf);
+					lf = logFileDAO.insert(lf);
 				}
+				
 				ParseResult parseResult = parser.parse();
 				
-				
 				if(Configuration.getConfiguration().getSaveLogToDatabase()) {
-					// inserting in database
 					// TODO change to IoC container
+					// inserting in database
 					LogEntryDAOImpl logEntryDAO = new LogEntryDAOImpl();
-					logEntryDAO.insertBatch(parseResult.getLogEntries());
+					logEntryDAO.insertBatch(parseResult.getLogEntries(), lf);
 					BlockedIpDAOImpl blockedIpDAO = new BlockedIpDAOImpl();
-					blockedIpDAO.insertBatch(parseResult.getBlockedIps().values());
+					blockedIpDAO.insertBatch(parseResult.getBlockedIps().values(), lf);
 				}
 			} catch (IOException e1) {
 				e1.printStackTrace();
