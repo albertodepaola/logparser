@@ -1,18 +1,16 @@
 package com.albertodepaola.logparser.db;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class DBRepository<T> {
 	public static Connection getConnection() throws SQLException {
 		// TODO pasar a confirutacion, usar tables.json existente
-		return DriverManager.getConnection("jdbc:mysql://localhost:3306/logparser?" + "user=root&password=");
+		return DriverManager.getConnection("jdbc:mysql://localhost:3306/logparser?user=root&password=rootroot&rewriteBatchedStatements=true");
 	}
 
 	public abstract T insert(T entity);

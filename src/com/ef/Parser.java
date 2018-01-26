@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -17,9 +19,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import com.albertodepaola.logparser.db.LogEntryDAOImpl;
 import com.albertodepaola.logparser.model.Configuration;
 import com.albertodepaola.logparser.model.DURATION;
 import com.albertodepaola.logparser.model.LogEntry;
+import com.albertodepaola.logparser.model.LogFile;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -107,10 +111,14 @@ public class Parser {
 
 	}
 	
-	private void parse() throws IOException {
+	private List<LogEntry> parse() throws IOException {
 		
 		Reader reader = null;
 		LineNumberReader lnr = null;
+		List<LogEntry> logEntries = new ArrayList<>();
+		// TODO receive as parameter
+		LogFile lf = new LogFile();
+		lf.setId(1l);
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
 			reader = new FileReader(this.accesslog);
@@ -161,16 +169,14 @@ public class Parser {
 				} catch (NumberFormatException nfe) { System.err.println("Error parsing status number in this log line: " + line); nfe.printStackTrace(); }
 				
 				le.setCompleteLine(line);
+				le.setLogFile(lf);
+				logEntries.add(le);
 				
 				if(!ipCounter.containsKey(le.getIp())) {
 					ipCounter.put(le.getIp(), 1);
 				} else {
 					ipCounter.put(le.getIp(), ipCounter.get(le.getIp()) + 1);
 				}
-				
-//				System.out.println(le);
-				
-//				System.exit(0);
 				
 			}
 			System.out.println("actual parsing " + (System.currentTimeMillis() - startTime));
@@ -183,7 +189,7 @@ public class Parser {
 				}
 				
 			}
-			
+			return logEntries;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			throw e;
@@ -264,9 +270,24 @@ public class Parser {
 		Parser parser = createParser(argumentsMap);
 		
 		try {
-			parser.parse();
+			// TODO set LogFile 
+			List<LogEntry> parse = parser.parse();
+			// inserting in database
+			/*
+			for (LogEntry logEntry : parse) {
+				LogEntryDAOImpl logEntryDAO = new LogEntryDAOImpl();
+				logEntryDAO.insert(logEntry);
+				// System.exit(1);
+			}
+			*/
+			LogEntryDAOImpl logEntryDAO = new LogEntryDAOImpl();
+			logEntryDAO.insert(parse);
 		} catch (IOException e1) {
 			e1.printStackTrace();
+			// TODO log error
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+			// TODO log error
 		}
 
 
