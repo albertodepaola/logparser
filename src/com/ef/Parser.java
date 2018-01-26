@@ -290,10 +290,12 @@ public class Parser {
 			Parser parser = createParser(argumentsMap, Configuration.getConfiguration().getLogConfiguration());
 			
 			try {
-				// TODO set LogFile 
-				LogFile lf = new LogFile(parser.getAccesslog(), parser.getStartDate(), parser.getDuration(), parser.getThreshold(), new Date());
-				LogFileDAOImpl logFileDAO = new LogFileDAOImpl();
-				logFileDAO.insert(lf);
+				
+				if(Configuration.getConfiguration().getSaveLogToDatabase()) {
+					LogFile lf = new LogFile(parser.getAccesslog(), parser.getStartDate(), parser.getDuration(), parser.getThreshold(), new Date());
+					LogFileDAOImpl logFileDAO = new LogFileDAOImpl();
+					logFileDAO.insert(lf);
+				}
 				ParseResult parseResult = parser.parse();
 				
 				
