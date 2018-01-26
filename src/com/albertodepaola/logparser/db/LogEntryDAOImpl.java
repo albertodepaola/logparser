@@ -91,7 +91,7 @@ public class LogEntryDAOImpl extends DBRepository<LogEntry> {
 		        for (LogEntry entity : logEntries) {
 		        	entity.setLogFile(lf);
 		        	ps.setString(1, entity.getIp());
-					ps.setDate(2, new java.sql.Date(entity.getDate().getTime()));
+					ps.setTimestamp(2, new java.sql.Timestamp(entity.getDate().getTime()));
 					ps.setString(3, entity.getRequest());
 					ps.setInt(4, entity.getStatus());
 					ps.setString(5, entity.getUserAgent());

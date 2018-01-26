@@ -21,10 +21,10 @@ public class LogFileDAOImpl extends DBRepository<LogFile> {
 		try ( PreparedStatement ps = getConnection().prepareStatement(SQL_INSERT, Statement.RETURN_GENERATED_KEYS)) {
 			// TODO map the entity to prepared statemnt
 			
-			ps.setDate(1, new java.sql.Date(entity.getStartDate().getTime()));
+			ps.setTimestamp(1, new java.sql.Timestamp(entity.getStartDate().getTime()));
 			ps.setString(2, entity.getDuration().name());
 			ps.setInt(3, entity.getThreshold());
-			ps.setDate(4, new java.sql.Date(entity.getProcessDate().getTime()));
+			ps.setTimestamp(4, new java.sql.Timestamp(entity.getProcessDate().getTime()));
 			ps.setString(5, entity.getMd5());
 						
 			ps.execute();

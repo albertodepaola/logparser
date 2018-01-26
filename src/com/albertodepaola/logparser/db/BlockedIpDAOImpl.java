@@ -91,7 +91,7 @@ public class BlockedIpDAOImpl extends DBRepository<BlockedIp> {
 					ps.setString(2, entity.getIp());
 					ps.setString(3, entity.getDescription());
 					ps.setInt(4, entity.getOcurrences());
-					ps.setDate(5, new java.sql.Date(new Date().getTime()));
+					ps.setTimestamp(5, new java.sql.Timestamp(new Date().getTime()));
 					
 					ps.addBatch();
 					ps.clearParameters();
