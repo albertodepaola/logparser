@@ -18,6 +18,11 @@ public class Configuration {
 	private String simpleDateFormat;
 	private static SimpleDateFormat sdf;
 	private Integer batchSize;
+	private String lineSeparator;
+	private String parserType;
+	private String salesmanType;
+	private String clientType;
+	private String salesType;
 
 	public String getDocumentation() {
 		return documentation;
@@ -74,6 +79,46 @@ public class Configuration {
 	public void setBatchSize(Integer batchSize) {
 		this.batchSize = batchSize;
 	}
+	
+	public String getLineSeparator() {
+		return this.lineSeparator;
+	}
+	
+	public void setLineSeparator(String lineSeparator) {
+		this.lineSeparator = lineSeparator;
+	}
+
+	public String getParserType() {
+		return parserType;
+	}
+
+	public void setParserType(String parserType) {
+		this.parserType = parserType;
+	}
+
+	public String getSalesmanType() {
+		return salesmanType;
+	}
+
+	public void setSalesmanType(String salesmanType) {
+		this.salesmanType = salesmanType;
+	}
+
+	public String getClientType() {
+		return clientType;
+	}
+
+	public void setClientType(String clientType) {
+		this.clientType = clientType;
+	}
+
+	public String getSalesType() {
+		return salesType;
+	}
+
+	public void setSalesType(String salesType) {
+		this.salesType = salesType;
+	}
 
 	public static void loadConfigurationFromJsonFile(String jsonFilePath) throws FileNotFoundException {
 		File f = new File(jsonFilePath);
@@ -87,5 +132,7 @@ public class Configuration {
 		} else
 			throw new FileNotFoundException("The file " + f.getAbsolutePath() + " does not exist");
 	}
+
+	
 
 }

@@ -3,13 +3,13 @@ package com.albertodepaola.logparser.model;
 import java.util.List;
 import java.util.Map;
 
-public class ParseResult {
+public class WHParserResult  {
 
 	private List<LogEntry> logEntries;
 	private Map<String, Integer> ipCounter;
 	private Map<String, BlockedIp> blockedIps;
 
-	public ParseResult(List<LogEntry> logEntries, Map<String, Integer> ipCounter, Map<String, BlockedIp> blockedIps) {
+	public WHParserResult(List<LogEntry> logEntries, Map<String, Integer> ipCounter, Map<String, BlockedIp> blockedIps) {
 		super();
 		this.logEntries = logEntries;
 		this.ipCounter = ipCounter;
@@ -39,4 +39,5 @@ public class ParseResult {
 	public void setBlockedIps(Map<String, BlockedIp> blockedIps) {
 		this.blockedIps = blockedIps;
 	}
+	
 }

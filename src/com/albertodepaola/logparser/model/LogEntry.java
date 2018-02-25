@@ -96,6 +96,10 @@ public class LogEntry {
 		this.logFile = log;
 	}
 	
+	public LOG_ENTRY_TYPE getType() {
+		return LOG_ENTRY_TYPE.GENERIC;
+	}
+	
 	@Override
 	public String toString(){
 		// TODO use bean utils
