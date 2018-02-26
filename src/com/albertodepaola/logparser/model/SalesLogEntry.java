@@ -84,6 +84,7 @@ public class SalesLogEntry extends LogEntry {
 			saleAmount = saleAmount.add(quantity.multiply(price));
 			
 		}
+		saleAmount = saleAmount.setScale(4, mc.getRoundingMode());
 	}
 
 	public class SaleDetail {

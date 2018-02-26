@@ -170,7 +170,6 @@ public class WHParser<T> implements Parser<WHParserResult> {
 			for (BlockedIp blockedIp : blockedIpsMap.values()) {
 				String blockedIpDescription = blockedIp.toString() + " between " + sdf.format(startDate) + " and " + sdf.format(endDate);
 				blockedIp.setDescription(blockedIpDescription);
-				System.out.println(blockedIp.getDescription());
 			}
 			
 			return new Result<WHParserResult>(new WHParserResult(logEntries, ipCounter, blockedIpsMap));

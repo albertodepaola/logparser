@@ -1,4 +1,4 @@
-package com.ef;
+package com.albertodepaola.logparser.example;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -46,10 +46,12 @@ public class ParserExample {
 			if(argumentsMap.get("parserType").equals("AB")) {
 				Parser<ABParserResult> abparser = new ParserFactory<ABParserResult>().createParser(new ABParserFactory(), argumentsMap);
 				ParserResult<ABParserResult> parse = abparser.parse();
+				
 				System.out.println(parse.getResult().getQuantidadeDeVendedores());
 				System.out.println(parse.getResult().getQuantidadeDeClientes());
 				System.out.println(parse.getResult().getIdMaiorVenda());
 				System.out.println(parse.getResult().getWorstSeller());
+				
 			} else {
 				Parser<WHParserResult> whparser = new ParserFactory<WHParserResult>().createParser(new WHParserFactory(), argumentsMap);
 				try {

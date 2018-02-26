@@ -9,7 +9,6 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,7 +17,6 @@ import java.util.Map;
 
 import com.albertodepaola.logparser.Parser;
 import com.albertodepaola.logparser.model.ABParserResult;
-import com.albertodepaola.logparser.model.BlockedIp;
 import com.albertodepaola.logparser.model.Configuration;
 import com.albertodepaola.logparser.model.DURATION;
 import com.albertodepaola.logparser.model.LOG_ENTRY_TYPE;
@@ -26,7 +24,6 @@ import com.albertodepaola.logparser.model.LogEntry;
 import com.albertodepaola.logparser.model.ParserResult;
 import com.albertodepaola.logparser.model.Result;
 import com.albertodepaola.logparser.model.SalesLogEntry;
-import com.albertodepaola.logparser.model.WHParserResult;
 
 public class ABParser<T> implements Parser<ABParserResult> {
 	
@@ -108,22 +105,15 @@ public class ABParser<T> implements Parser<ABParserResult> {
 
 	public ParserResult<ABParserResult> parse() throws IOException {
 		
-		List<LogEntry> logEntries = new ArrayList<>();
-		Map<String, Integer> ipCounter = new HashMap<>();
-		Map<String, BlockedIp> blockedIpsMap = new HashMap<>();
-		
-		
-		
 		try (Reader reader = new FileReader(this.accesslog);
 				LineNumberReader lnr = new LineNumberReader(reader);){
 			
 			Long quantidadeDeClientes = 0L;
 			Long quantidadeDeVendedores = 0L;
 			Long idMaiorVenda = 0L;
-			Long idPiorVendedor = 0L;
+			String worstSeller = "";
 			BigDecimal maiorVenda = BigDecimal.ZERO;
 			BigDecimal menorVenda = BigDecimal.ZERO;
-			String worstSeller = "";
 			
 			// read file to the end with buffered line reader
 			String line = null;
@@ -150,12 +140,9 @@ public class ABParser<T> implements Parser<ABParserResult> {
 						idMaiorVenda = sle.getSalesId();
 					}
 					if(menorVenda.compareTo(BigDecimal.ZERO) == 0 || menorVenda.compareTo(sle.getSaleAmount()) > 0) {
-						System.out.println("Menor venta: " + sle.getSaleAmount().toPlainString() + " - " + sle.getSalesmanName());
 						menorVenda = sle.getSaleAmount();
 						worstSeller = sle.getSalesmanName();
-					} else {
-//						System.out.println("venta mayor: " + sle.getSaleAmount().toPlainString() + " - " + sle.getSalesmanName());
-					}
+					} 
 				}
 				
 			}
